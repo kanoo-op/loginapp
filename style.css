@@ -162,7 +162,7 @@ body {
   justify-content: center;
   flex-direction: column;
   gap: 12px;
-  z-index: 20;
+  z-index: 30;
 }
 
 .loading-overlay.show {
@@ -181,6 +181,103 @@ body {
 .loading-text {
   font-size: 12px;
   color: var(--text-sub);
+}
+
+/* 🔑 비밀번호 찾기 모달 */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 20, 0.65);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  animation: fadeIn 0.18s var(--transition-fast);
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--bg-card);
+  border-radius: 18px;
+  border: 1px solid var(--border-subtle);
+  padding: 16px 18px 14px;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.7);
+  animation: fadeInUp 0.22s var(--transition-fast);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.modal-close-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text-sub);
+  padding: 4px;
+}
+
+.modal-close-btn:hover {
+  color: var(--text-main);
+}
+
+.modal-description {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.modal-form .field {
+  margin-bottom: 10px;
+}
+
+.modal-footer {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modal-message {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 8px 9px;
+  border-radius: 12px;
+  display: none;
+}
+
+.modal-message.show {
+  display: block;
+}
+
+.modal-message.success {
+  background: rgba(61, 214, 140, 0.08);
+  border: 1px solid rgba(61, 214, 140, 0.4);
+  color: var(--success);
+}
+
+.modal-message.error {
+  background: rgba(255, 75, 106, 0.08);
+  border: 1px solid rgba(255, 75, 106, 0.4);
+  color: var(--danger);
 }
 
 /* 브랜드 영역 */
@@ -348,7 +445,29 @@ input:focus {
   transform: scale(1.05);
 }
 
-/* 하단 영역 */
+/* 하단 영역 / 보조 텍스트 */
+
+.helper-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: -4px 0 8px;
+}
+
+.forgot-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 11px;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.9;
+}
+
+.forgot-link:hover {
+  opacity: 1;
+}
 
 .form-footer {
   margin-top: 6px;
@@ -673,6 +792,10 @@ input:focus {
   .primary-btn {
     width: 100%;
   }
+
+  .modal-card {
+    margin: 0 16px;
+  }
 }
 
 /* 애니메이션 */
@@ -685,6 +808,15 @@ input:focus {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
