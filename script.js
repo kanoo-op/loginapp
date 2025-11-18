@@ -73,6 +73,70 @@ function ensureTestUser() {
 }
 
 // ---------------------------------------------------------
+// 비밀번호 강도 계산
+// ---------------------------------------------------------
+// 반환 예시: { level: 'invalid' | 'weak' | 'medium' | 'strong', text: '...' , valid: boolean }
+function evaluatePasswordStrength(password) {
+  const result = {
+    level: "invalid",
+    text: "비밀번호는 8자 이상이며 영어 대문자와 소문자를 모두 포함해야 합니다.",
+    valid: false
+  };
+
+  if (!password) {
+    return result;
+  }
+
+  const length = password.length;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSymbol = /[^A-Za-z0-9]/.test(password);
+
+  // 기본 조건: 8자 이상 + 대문자 + 소문자
+  if (!(length >= 8 && hasUpper && hasLower)) {
+    result.level = "invalid";
+    result.text = "조건 미충족: 8자 이상, 영어 대·소문자를 모두 포함해야 합니다.";
+    result.valid = false;
+    return result;
+  }
+
+  // 여기까지 오면 기본 조건 충족
+  result.valid = true;
+
+  // 점수 기반 강도 계산
+  let score = 0;
+  if (length >= 12) score++;
+  if (hasNumber) score++;
+  if (hasSymbol) score++;
+
+  if (score <= 0) {
+    result.level = "weak";
+    result.text = "강도: 약함 — 기본 조건은 만족하지만 길이와 조합이 단순합니다.";
+  } else if (score === 1) {
+    result.level = "medium";
+    result.text = "강도: 보통 — 일상적인 사용에 무난한 수준입니다.";
+  } else {
+    result.level = "strong";
+    result.text = "강도: 강함 — 길이와 문자 조합이 매우 안전한 편입니다.";
+  }
+
+  return result;
+}
+
+function updatePasswordStrengthUI(password) {
+  const el = document.getElementById("pwStrength");
+  if (!el) return;
+
+  const info = evaluatePasswordStrength(password);
+
+  el.className = "pw-strength " + info.level; // base + level class
+  el.textContent = info.text;
+
+  return info;
+}
+
+// ---------------------------------------------------------
 // 대시보드 로직
 // ---------------------------------------------------------
 function goToDashboard(user) {
@@ -261,7 +325,6 @@ function setupForgotModal() {
     cancelBtn.addEventListener("click", hideForgotModal);
   }
 
-  // 바깥 클릭하면 닫기
   if (overlay) {
     overlay.addEventListener("click", (e) => {
       if (e.target === overlay) {
@@ -288,7 +351,6 @@ function setupForgotModal() {
       showSpinner();
 
       if (USE_MOCK_BACKEND) {
-        // ---- 목업 모드: localStorage에서 유저 검색 후, 현재 비밀번호를 안내 메시지로 표시 ----
         setTimeout(() => {
           const users = loadUsers();
           const user = users.find((u) => u.email === email);
@@ -306,7 +368,6 @@ function setupForgotModal() {
           );
         }, 800);
       } else {
-        // ---- 실제 API 모드: /api/forgot-password ----
         fetch("/api/forgot-password", {
           method: "POST",
           headers: {
@@ -406,6 +467,11 @@ function setupSignupForm() {
   const pwInput = document.getElementById("signupPassword");
   const pwCheckInput = document.getElementById("signupPasswordCheck");
 
+  // 🔥 비밀번호 입력 시 강도 실시간 업데이트
+  pwInput.addEventListener("input", () => {
+    updatePasswordStrengthUI(pwInput.value);
+  });
+
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -424,8 +490,11 @@ function setupSignupForm() {
       return;
     }
 
-    if (password.length < 4) {
-      showMessage("error", "비밀번호는 최소 4자 이상이어야 합니다.");
+    // 비밀번호 규칙 검사 (강도 함수 재사용)
+    const pwInfo = evaluatePasswordStrength(password);
+    if (!pwInfo.valid) {
+      showMessage("error", pwInfo.text);
+      updatePasswordStrengthUI(password);
       return;
     }
 
@@ -457,6 +526,7 @@ function setupSignupForm() {
         );
 
         form.reset();
+        updatePasswordStrengthUI(""); // 초기화
 
         const loginTabButton = document.querySelector(
           '.tab-button[data-target="login"]'
@@ -486,6 +556,7 @@ function setupSignupForm() {
           );
 
           form.reset();
+          updatePasswordStrengthUI("");
 
           const loginTabButton = document.querySelector(
             '.tab-button[data-target="login"]'
@@ -518,4 +589,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupSignupForm();
   setupDashboard();
   restoreDashboardIfSessionExists();
+
+  // 초기 강도 텍스트 세팅 (빈 값 기준)
+  updatePasswordStrengthUI("");
 });
