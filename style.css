@@ -445,6 +445,30 @@ input:focus {
   transform: scale(1.05);
 }
 
+/* 비밀번호 강도 표시 */
+
+.pw-strength {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-sub);
+}
+
+.pw-strength.invalid {
+  color: var(--danger);
+}
+
+.pw-strength.weak {
+  color: var(--danger);
+}
+
+.pw-strength.medium {
+  color: #f6c350;
+}
+
+.pw-strength.strong {
+  color: var(--success);
+}
+
 /* 하단 영역 / 보조 텍스트 */
 
 .helper-row {
