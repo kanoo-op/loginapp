@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>로그인 / 회원가입</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- 웹폰트 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- 🔐 인증 섹션 -->
+    <div id="authSection" class="auth-page">
+      <div class="auth-card">
+        <!-- 🔄 로딩 스피너 오버레이 -->
+        <div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
+          <div class="spinner"></div>
+          <span class="loading-text">처리 중입니다...</span>
+        </div>
+
+        <div class="brand-area">
+          <div class="brand-mark">LOG</div>
+          <div class="brand-text">
+            <h1>Welcome Back</h1>
+            <p>정관우 연습용 로그인 회원가입 홈페이지</p>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-button active" data-target="login">로그인</button>
+          <button class="tab-button" data-target="signup">회원가입</button>
+        </div>
+
+        <div class="forms">
+          <!-- 로그인 폼 -->
+          <form id="loginForm" class="form active" autocomplete="off">
+            <div class="field">
+              <label for="loginEmail">이메일</label>
+              <input
+                type="email"
+                id="loginEmail"
+                placeholder="example@email.com"
+                required
+              />
+            </div>
+
+            <div class="field">
+              <label for="loginPassword">비밀번호</label>
+              <div class="password-wrapper">
+                <input
+                  type="password"
+                  id="loginPassword"
+                  placeholder="비밀번호를 입력하세요"
+                  required
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  data-target="loginPassword"
+                  aria-label="비밀번호 보기/숨기기"
+                >
+                  👁
+                </button>
+              </div>
+            </div>
+
+            <div class="form-footer">
+              <label class="checkbox">
+                <input type="checkbox" id="rememberMe" />
+                <span>로그인 상태 유지</span>
+              </label>
+              <button type="submit" class="primary-btn">로그인</button>
+            </div>
+          </form>
+
+          <!-- 회원가입 폼 -->
+          <form id="signupForm" class="form" autocomplete="off">
+            <div class="field">
+              <label for="signupName">이름</label>
+              <input
+                type="text"
+                id="signupName"
+                placeholder="홍길동"
+                required
+              />
+            </div>
+
+            <div class="field">
+              <label for="signupEmail">이메일</label>
+              <input
+                type="email"
+                id="signupEmail"
+                placeholder="example@email.com"
+                required
+              />
+            </div>
+
+            <div class="field">
+              <label for="signupPassword">비밀번호</label>
+              <div class="password-wrapper">
+                <input
+                  type="password"
+                  id="signupPassword"
+                  placeholder="최소 4자 이상 입력"
+                  required
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  data-target="signupPassword"
+                  aria-label="비밀번호 보기/숨기기"
+                >
+                  👁
+                </button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="signupPasswordCheck">비밀번호 확인</label>
+              <div class="password-wrapper">
+                <input
+                  type="password"
+                  id="signupPasswordCheck"
+                  placeholder="비밀번호를 다시 입력"
+                  required
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  data-target="signupPasswordCheck"
+                  aria-label="비밀번호 보기/숨기기"
+                >
+                  👁
+                </button>
+              </div>
+            </div>
+
+            <div class="form-footer">
+              <span class="helper-text">이미 계정이 있다면 상단 탭에서 로그인으로 이동하세요.</span>
+              <button type="submit" class="primary-btn">회원가입</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- 메시지 영역 -->
+        <div id="messageBox" class="message-box" aria-live="polite"></div>
+
+        <p class="hint-text">
+          테스트 계정: <strong>test@test.com</strong> / <strong>1234</strong>
+        </p>
+        <p class="hint-text">
+          <strong>NOTE:</strong> 지금은 프론트에서 <code>localStorage</code>를 사용한 목업 모드입니다.<br />
+          실제 서버 연결 시 <code>script.js</code>의 <code>USE_MOCK_BACKEND</code>를 <code>false</code>로 변경하고 <code>fetch</code> API를 쓰면 됩니다.
+        </p>
+      </div>
+    </div>
+
+    <!-- 📊 로그인 후 대시보드 섹션 -->
+    <div id="dashboardSection" class="dashboard hidden">
+      <header class="dash-header">
+        <div class="dash-brand">
+          <div class="dash-logo">LOG</div>
+          <div class="dash-meta">
+            <span class="dash-title">My Studio</span>
+            <span class="dash-subtitle">평범한 미니 대시보드</span>
+          </div>
+        </div>
+        <div class="dash-user">
+          <div class="dash-user-text">
+            <span class="dash-user-name" id="dashUserName">User</span>
+            <span class="dash-user-email" id="dashUserEmail">user@email.com</span>
+          </div>
+          <button id="logoutBtn" class="secondary-btn">로그아웃</button>
+        </div>
+      </header>
+
+      <main class="dash-main">
+        <section class="dash-row">
+          <div class="dash-card primary">
+            <h2>오늘의 상태</h2>
+            <p class="dash-highlight" id="dashWelcomeText">
+              반가워요! 오늘도 멋진 작업을 시작해 볼까요?
+            </p>
+            <ul class="dash-metrics">
+              <li>
+                <span class="metric-label">오늘 로그인 시간</span>
+                <span class="metric-value" id="dashLoginTime">-</span>
+              </li>
+              <li>
+                <span class="metric-label">최근 활동</span>
+                <span class="metric-value">UI 키트 정리, 프로토타입 수정</span>
+              </li>
+              <li>
+                <span class="metric-label">알림</span>
+                <span class="metric-value">3 개의 새로운 피드백</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="dash-card">
+            <h3>퀵 액션</h3>
+            <div class="quick-actions">
+              <button class="pill-btn">새 프로젝트 만들기</button>
+              <button class="pill-btn">최근 작업 열기</button>
+              <button class="pill-btn">스타일 가이드 보기</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="dash-row">
+          <div class="dash-card">
+            <h3>최근 로그인 기록 (예시)</h3>
+            <ul class="dash-list">
+              <li>
+                <span>2025-11-18 14:21</span>
+                <span class="tag">웹</span>
+              </li>
+              <li>
+                <span>2025-11-17 22:03</span>
+                <span class="tag">모바일</span>
+              </li>
+              <li>
+                <span>2025-11-16 09:44</span>
+                <span class="tag">웹</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="dash-card">
+            <h3>간단 메모</h3>
+            <textarea
+              id="dashMemo"
+              class="dash-textarea"
+              placeholder="오늘 작업할 것들을 간단히 적어보세요."
+            ></textarea>
+            <button id="saveMemoBtn" class="primary-btn small">메모 저장</button>
+            <p class="dash-memo-info" id="memoInfoText">아직 저장된 메모가 없습니다.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
