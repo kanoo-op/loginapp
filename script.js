@@ -1,7 +1,7 @@
 // ---------------------------------------------------------
 // 설정: 목업(localStorage) vs 실제 백엔드 API 사용 여부
 // true  = localStorage를 이용한 프론트 목업 모드
-// false = 실제 서버의 /api/login, /api/signup 을 fetch로 호출
+// false = 실제 서버의 /api/login, /api/signup, /api/forgot-password 호출
 // ---------------------------------------------------------
 const USE_MOCK_BACKEND = true;
 
@@ -76,7 +76,6 @@ function ensureTestUser() {
 // 대시보드 로직
 // ---------------------------------------------------------
 function goToDashboard(user) {
-  // user: { name, email, ... }
   const authSection = document.getElementById("authSection");
   const dashboardSection = document.getElementById("dashboardSection");
 
@@ -89,16 +88,16 @@ function goToDashboard(user) {
     document.getElementById("dashUserEmail").textContent = user.email;
   }
 
-  // 로그인 시간 표시
   const now = new Date();
-  const timeStr = `${now.getFullYear()}-${
-    String(now.getMonth() + 1).padStart(2, "0")
-  }-${String(now.getDate()).padStart(2, "0")} ${
-    String(now.getHours()).padStart(2, "0")
-  }:${String(now.getMinutes()).padStart(2, "0")}`;
+  const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(
+    2,
+    "0"
+  )}:${String(now.getMinutes()).padStart(2, "0")}`;
   document.getElementById("dashLoginTime").textContent = timeStr;
 
-  // 세션 저장 (새로고침 시에도 유지하고 싶다면 사용)
   sessionStorage.setItem(
     "currentUser",
     JSON.stringify({
@@ -131,7 +130,6 @@ function setupDashboard() {
   const memoInfoText = document.getElementById("memoInfoText");
   const saveMemoBtn = document.getElementById("saveMemoBtn");
 
-  // 메모 복원
   const storedMemo = localStorage.getItem("dashMemo");
   if (storedMemo) {
     memoInput.value = storedMemo;
@@ -206,6 +204,138 @@ function setupPasswordToggle() {
 }
 
 // ---------------------------------------------------------
+// 비밀번호 찾기 모달
+// ---------------------------------------------------------
+function showForgotModal() {
+  const overlay = document.getElementById("forgotModal");
+  const emailInput = document.getElementById("forgotEmail");
+  const msg = document.getElementById("forgotMessageBox");
+  if (!overlay) return;
+
+  overlay.classList.add("show");
+  overlay.setAttribute("aria-hidden", "false");
+  msg.className = "modal-message";
+  msg.textContent = "";
+  emailInput.value = "";
+  emailInput.focus();
+}
+
+function hideForgotModal() {
+  const overlay = document.getElementById("forgotModal");
+  const msg = document.getElementById("forgotMessageBox");
+  if (!overlay) return;
+
+  overlay.classList.remove("show");
+  overlay.setAttribute("aria-hidden", "true");
+  if (msg) {
+    msg.className = "modal-message";
+    msg.textContent = "";
+  }
+}
+
+function showForgotMessage(type, text) {
+  const box = document.getElementById("forgotMessageBox");
+  if (!box) return;
+  box.className =
+    "modal-message show " + (type === "success" ? "success" : "error");
+  box.textContent = text;
+}
+
+function setupForgotModal() {
+  const link = document.getElementById("forgotPasswordLink");
+  const overlay = document.getElementById("forgotModal");
+  const closeBtn = document.getElementById("forgotCloseBtn");
+  const cancelBtn = document.getElementById("forgotCancelBtn");
+  const form = document.getElementById("forgotForm");
+
+  if (link) {
+    link.addEventListener("click", () => {
+      showForgotModal();
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", hideForgotModal);
+  }
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", hideForgotModal);
+  }
+
+  // 바깥 클릭하면 닫기
+  if (overlay) {
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) {
+        hideForgotModal();
+      }
+    });
+  }
+
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const emailInput = document.getElementById("forgotEmail");
+      const email = emailInput.value.trim();
+
+      if (!email) {
+        showForgotMessage("error", "이메일을 입력해주세요.");
+        return;
+      }
+      if (!email.includes("@") || !email.includes(".")) {
+        showForgotMessage("error", "이메일 형식이 올바르지 않습니다.");
+        return;
+      }
+
+      showSpinner();
+
+      if (USE_MOCK_BACKEND) {
+        // ---- 목업 모드: localStorage에서 유저 검색 후, 현재 비밀번호를 안내 메시지로 표시 ----
+        setTimeout(() => {
+          const users = loadUsers();
+          const user = users.find((u) => u.email === email);
+
+          if (!user) {
+            hideSpinner();
+            showForgotMessage("error", "등록되지 않은 이메일입니다.");
+            return;
+          }
+
+          hideSpinner();
+          showForgotMessage(
+            "success",
+            `비밀번호 재설정 링크를 이메일로 보냈다고 가정합니다.\n테스트용으로 현재 비밀번호는 "${user.password}" 입니다.`
+          );
+        }, 800);
+      } else {
+        // ---- 실제 API 모드: /api/forgot-password ----
+        fetch("/api/forgot-password", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email })
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.ok) {
+              throw new Error(data.message || "비밀번호 찾기에 실패했습니다.");
+            }
+            hideSpinner();
+            showForgotMessage("success", data.message || "재설정 링크를 이메일로 보냈습니다.");
+          })
+          .catch((err) => {
+            console.error(err);
+            hideSpinner();
+            showForgotMessage(
+              "error",
+              err.message || "비밀번호 찾기 중 오류가 발생했습니다."
+            );
+          });
+      }
+    });
+  }
+}
+
+// ---------------------------------------------------------
 // 로그인 / 회원가입: 목업 vs 실제 API 분기
 // ---------------------------------------------------------
 function setupLoginForm() {
@@ -227,7 +357,6 @@ function setupLoginForm() {
     showSpinner();
 
     if (USE_MOCK_BACKEND) {
-      // ---- 목업 모드: localStorage 에서 검증 ----
       setTimeout(() => {
         const users = loadUsers();
         const user = users.find((u) => u.email === email);
@@ -243,7 +372,6 @@ function setupLoginForm() {
         goToDashboard(user);
       }, 800);
     } else {
-      // ---- 실제 API 모드: /api/login 으로 fetch ----
       fetch("/api/login", {
         method: "POST",
         headers: {
@@ -286,7 +414,6 @@ function setupSignupForm() {
     const password = pwInput.value;
     const passwordCheck = pwCheckInput.value;
 
-    // 기본 유효성 검사 (목업/실제 둘 다 공통)
     if (!name || !email || !password || !passwordCheck) {
       showMessage("error", "모든 필드를 입력해주세요.");
       return;
@@ -310,7 +437,6 @@ function setupSignupForm() {
     showSpinner();
 
     if (USE_MOCK_BACKEND) {
-      // ---- 목업 모드: localStorage 에 저장 ----
       setTimeout(() => {
         const users = loadUsers();
         const exists = users.some((u) => u.email === email);
@@ -340,7 +466,6 @@ function setupSignupForm() {
         }
       }, 900);
     } else {
-      // ---- 실제 API 모드: /api/signup 호출 ----
       fetch("/api/signup", {
         method: "POST",
         headers: {
@@ -388,6 +513,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupTabs();
   setupPasswordToggle();
+  setupForgotModal();
   setupLoginForm();
   setupSignupForm();
   setupDashboard();
